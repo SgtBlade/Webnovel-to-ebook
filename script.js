@@ -1,3 +1,12 @@
+// ==UserScript==
+// @name         WebnovelReader
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  Convert online book to ebook
+// @author       You
+// @match        https://www.webnovel.com/book/*
+// @grant        none
+// ==/UserScript==
 
 (function() {
     'use strict';
