@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         WebnovelReader
 // @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Convert online book to ebook
+// @version      1.0
+// @description  Convert to bookable format
 // @author       You
 // @match        https://www.webnovel.com/book/*
 // @grant        none
@@ -42,6 +42,12 @@
 
     const init = async () => {
 
+        document.querySelectorAll('script').forEach(scrip => {
+         scrip.parentElement.removeChild(scrip);
+        })
+
+
+
         let author = "unknown";
         try {
             author = document.querySelector('.cha-info').firstChild.nextElementSibling.nextElementSibling.nextElementSibling.firstElementChild.nextElementSibling.textContent
@@ -52,6 +58,8 @@
 
         const chaps = [];
 
+
+        const title = document.querySelector('.dib.ell.vam.c_000').getAttribute('title');
         const $chapters = await document.querySelectorAll(".chapter_content");
 
         await $chapters.forEach(async chapter => {
@@ -59,6 +67,7 @@
             const chapterText = await chapter.querySelectorAll(".dib.pr");
             const chapters = [];
             chapterText.forEach(element => {
+                if(element.querySelector('pirate'))element.querySelector('pirate').remove()
                 let tempstring = (element.querySelector('p').textContent.replace(/(\r\n|\n|\r)/g,""))
                 chapters.push(tempstring.replace(/ +(?= )/g,''))
             })
@@ -66,7 +75,7 @@
             await chaps.push(currentChapter);
         })
 
-        book = await new Book(document.querySelector(".lh1.mb16.auto.oh.lh1d2").textContent, chaps, document.querySelector('.g_thumb.auto').querySelector('img').src);
+        book = await new Book(title, chaps, document.querySelector('.g_thumb.mla.mra').querySelector('img').src);
         const $book = document.createElement('article');
         const $title = document.createElement('h2');
         $title.textContent = book.name;
@@ -105,8 +114,30 @@
 
 
         await document.querySelector('body').appendChild($book);
-        console.log(book)
+
+
+
+
+            let edited = book.name.split(' ').join('_');
+            const desc = localStorage.getItem(edited);
+
+            const metaTag = document.createElement('meta');
+            metaTag.name = "DC.description";
+            metaTag.content = desc
+            document.querySelector('head').appendChild(metaTag);
+
     }
+
+
+    const addBookDescriptionToStorage = () => {
+         const desc = `Source: ${window.location.href}
+                       ${document.querySelector('.g_txt_over.mb48.fs16.j_synopsis p').textContent}`;
+        let title = document.querySelectorAll('.lh24.fs16.pt24.pb24.ell.c_000 span');
+        title = (title[title.length-1].textContent).split(' ').join('_')
+        localStorage.setItem(title, desc);
+        console.log(localStorage);
+    }
+
 
     const $button = document.createElement('p');
     $button.addEventListener('click', init);
@@ -125,6 +156,25 @@
     cursor: pointer;
     `
     document.querySelector('body').appendChild($button);
+
+
+    const $buttonn = document.createElement('p');
+    $buttonn.addEventListener('click', addBookDescriptionToStorage);
+    $buttonn.textContent = 'Add description'
+    $buttonn.style.cssText  =
+    `
+    color: white;
+    padding: 5px 8px;
+    font-size: 18px;
+    background-color: #1f2129;
+    border-radius: 15px;
+    position: fixed;
+    z-index: 999;
+    top: 110px;
+    right: 60px;
+    cursor: pointer;
+    `
+    document.querySelector('body').appendChild($buttonn);
 
     // Your code here...
 })();
